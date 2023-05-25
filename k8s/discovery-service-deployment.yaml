@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    labels:
+        app: discovery-service
+    name: discovery-service
+    namespace: fireapp
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: discovery-service
+    strategy: {}
+    template:
+        metadata:
+            labels:
+                app: discovery-service
+        spec:
+            containers:
+                - image: REPOSITORY_PREFIX_ENV.azurecr.io/fireapp-discovery-service:latest
+                  name: discovery-service
+                  imagePullPolicy: Always
+                  livenessProbe:
+                      httpGet:
+                          port: 8761
+                          path: /actuator/health/liveness
+                      initialDelaySeconds: 90
+                      periodSeconds: 5
+                  readinessProbe:
+                      httpGet:
+                          port: 8761
+                          path: /actuator/health/readiness
+                      initialDelaySeconds: 15
+                  lifecycle:
+                      preStop:
+                          exec:
+                              command: ["sh", "-c", "sleep 10"]
+                  resources:
+                      requests:
+                          memory: 256Mi
+                      limits:
+                          memory: 1Gi
+                  ports:
+                      - containerPort: 8761
+            restartPolicy: Always
+status: {}
